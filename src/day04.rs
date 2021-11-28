@@ -1,8 +1,8 @@
 use std::fs;
 use regex::Regex;
 
-fn main4() {
-    let input = fs::read_to_string("src/input4.txt")
+pub fn go() {
+    let input = fs::read_to_string("inputs/input04.txt")
         .expect("Could not read the input file.");
     
     let passports = input.split("\n\n");
