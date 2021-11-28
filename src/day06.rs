@@ -1,3 +1,3 @@
 pub fn go() {
-    // do nothing for now.
+    println!("Day 6");
 }

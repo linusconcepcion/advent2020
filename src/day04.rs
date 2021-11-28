@@ -2,6 +2,8 @@ use std::fs;
 use regex::Regex;
 
 pub fn go() {
+    println!("Day 4");
+
     let input = fs::read_to_string("inputs/input04.txt")
         .expect("Could not read the input file.");
     

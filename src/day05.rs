@@ -1,6 +1,8 @@
 use std::fs;
 
 pub fn go() {
+    println!("Day 5");
+
     let input = fs::read_to_string("inputs/input05.txt")
         .expect("Could not read the input file.");
 
