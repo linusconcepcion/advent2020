@@ -1,4 +1,5 @@
 use std::fs;
+use crate::util;
 
 pub fn go() {
     println!("Day 5");
@@ -6,7 +7,7 @@ pub fn go() {
     let input = fs::read_to_string("inputs/input05.txt")
         .expect("Could not read the input file.");
 
-    let mut seatids = input.split('\n').map(|s| { get_seatid(s) }).collect::<Vec<i32>>();
+    let mut seatids = input.split(util::LINE_ENDING).map(|s| { get_seatid(s) }).collect::<Vec<i32>>();
     seatids.sort();
 
     for index in 0..seatids.len() {

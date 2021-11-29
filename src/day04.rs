@@ -1,5 +1,6 @@
 use std::fs;
 use regex::Regex;
+use crate::util;
 
 pub fn go() {
     println!("Day 4");
@@ -7,7 +8,7 @@ pub fn go() {
     let input = fs::read_to_string("inputs/input04.txt")
         .expect("Could not read the input file.");
     
-    let passports = input.split("\n\n");
+    let passports = input.split(util::LINE_ENDING2);
     let mut index = 1;
     let mut legal = 0;
     for pass in passports {
@@ -32,6 +33,10 @@ fn is_legal(str: &str) -> bool {
 }
 
 fn is_valid_part(str: &str) -> bool {
+    if str.len()==0 {
+        return true;
+    }
+
     let parts: Vec<&str> = str.trim().split(':').collect();
     if parts.len()!=2 {
         return false;
