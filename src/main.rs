@@ -3,7 +3,7 @@ mod util;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let days = [day4, day5, day6, day7];
+    let days = [day4, day5, day6, day7, day7b];
 
     if args.len()==1 {
         days.last().unwrap()();
@@ -31,4 +31,9 @@ fn day6() {
 mod day07;
 fn day7() {
     day07::go();
+}
+
+mod day07b;
+fn day7b() {
+    day07b::go();
 }
