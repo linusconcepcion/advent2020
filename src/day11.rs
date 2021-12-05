@@ -20,6 +20,8 @@ pub fn go() {
 
     let mut rounds = 0;
     loop {
+        printgrid(grid);
+
         rounds+=1;
         let (newgrid, changes) = run(grid);
         if changes==0 {
@@ -32,13 +34,22 @@ pub fn go() {
         r.iter().filter(|&c| { *c=='#' }).count()
     }).sum();
 
-    println!("{:?}", grid);
     println!("Occupied: {}, Round: {}", occupied, rounds);
+}
+
+fn printgrid(grid: Grid) {
+    for y in 0..HEIGHT {
+        for x in 0..WIDTH {
+            print!("{}", grid[y][x]);
+        }
+        println!("");
+    }
+    println!("");
 }
 
 fn grid_xy(grid: Grid, x: i32, y: i32) -> char {
     if x < 0 || x >= WIDTH as i32 || y < 0 || y>=HEIGHT as i32 {
-        return '.';
+        return 'W'; // wall
     }
 
     grid[y as usize][x as usize]
@@ -46,9 +57,23 @@ fn grid_xy(grid: Grid, x: i32, y: i32) -> char {
 
 fn look_around(grid: Grid, x: i32, y: i32) -> usize {
     let checks = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
-    checks.iter().filter(|&p| {
-        grid_xy(grid, x+p[0], y+p[1])=='#'
+    checks.iter().filter(|&[dx,dy]| {
+        is_direction_occupied(grid, x, y, *dx, *dy)
     }).count()    
+}
+
+fn is_direction_occupied(grid: Grid, mut x: i32, mut y: i32, dx: i32, dy: i32) -> bool {
+    loop {
+        x += dx;
+        y += dy;
+        let pos = grid_xy(grid, x, y);
+        if pos=='W' || pos=='L' {
+            break;
+        } else if pos=='#' {
+            return true;
+        }
+    }
+    false
 }
 
 fn change(grid: Grid, x: i32, y: i32) -> (char, char) {
@@ -58,7 +83,7 @@ fn change(grid: Grid, x: i32, y: i32) -> (char, char) {
             return ('L', '#');
         }
     } else if curxy=='#' {
-        if look_around(grid, x, y)>=4 {
+        if look_around(grid, x, y)>=5 {
             return ('#', 'L');
         }
     }
