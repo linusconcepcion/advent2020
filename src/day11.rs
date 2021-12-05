@@ -106,3 +106,4 @@ fn run(grid: Grid) -> (Grid, i32) {
     }
     (newgrid, changes)
 }
+
