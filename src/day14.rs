@@ -8,27 +8,61 @@ pub fn go() {
     let input = fs::read_to_string("inputs/input14.txt")
         .expect("Could not read the input file.");
 
-    let mut mask = "".to_string();
-    let mut mem : HashMap<i32, i64> = HashMap::new();
+    let mut masks : Vec<String> = Vec::new();
+    let mut mem : HashMap<i64, i64> = HashMap::new();
 
     let lines : Vec<&str> = input.split(util::LINE_ENDING).collect();
     for line in lines {
 
         let parts : Vec<&str> = line.split(" = ").collect();
         match parts[0] {
-            "mask" => mask = parts[1].to_string(),
+            "mask" => {
+                masks = mask_permutations(parts[1])
+            }
             _ => {
                 let nums = &parts[0][4..parts[0].len()-1];
-                let key = str::parse::<i32>(nums).unwrap();
-                let to_mask = str::parse::<i64>(parts[1]).unwrap();
+                let to_mask = str::parse::<i64>(nums).unwrap();
+                let val = str::parse::<i64>(parts[1]).unwrap();
 
-                mem.insert(key, apply_bitmask(&mask, to_mask));
+                for mask in &masks {
+                    let key = apply_bitmask(mask, to_mask);
+                    mem.insert(key, val);
+                }
             }
         }
     }
 
     let total : i64 = mem.values().sum();
     println!("total: {}", total);
+}
+
+fn mask_permutations(mask: &str) -> Vec<String> {
+    let mut result : Vec<String> = Vec::new();
+    if mask.len()==0 {
+        return result;
+    }
+
+    let firstchar = mask.chars().nth(0).unwrap();
+    let digits = match firstchar {
+        '0' => ["X"].to_vec(),
+        '1' => ["1"].to_vec(),
+        'X' => ["0","1"].to_vec(),
+        _ => panic!("unexpected character: {}", firstchar)
+    };
+
+    let rest = mask_permutations(&mask[1..]);
+    for digit in digits {
+        if rest.len()==0 {
+            result.push(digit.to_string());
+        } else {
+            for add in &rest {
+                let combined = digit.to_owned() + add;
+                result.push(combined);
+            }
+        }
+    }
+
+    result
 }
 
 fn apply_bitmask(mask: &str, to_mask: i64) -> i64 {
