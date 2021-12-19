@@ -47,15 +47,23 @@ pub fn go() {
     println!("Valid tickets: {}", valid_tickets.len());
 
     let myticket = &all_tickets[0];
-    let mut mytotal = 0i32;
+    //let mut mytotal = 0i32;
 
     set_possible_indexes(&mut fields, &valid_tickets);
     process_possible_indexes(&mut fields);
 
-    for field in fields {
-        println!("{}: {:?}", field.name, field.possible_indexes);
-    }
+    // for field in &fields {
+    //     println!("{}: {:?}", field.name, field.possible_indexes);
+    // }
 
+    let mut mult: i64 = 1;
+
+    for num in fields.iter().filter(|&f| { f.name.starts_with("departure")})
+        .map(|f| {myticket[f.possible_indexes[0]]}) {
+        mult = mult * (num as i64);
+        println!("num {}", num);
+    }
+    println!("multiple {}", mult);
 }
 
 fn set_possible_indexes(fields: &mut Vec<Field>, valid_tickets: &Vec<Ticket>) {
@@ -68,18 +76,21 @@ fn set_possible_indexes(fields: &mut Vec<Field>, valid_tickets: &Vec<Ticket>) {
 fn process_possible_indexes(fields: &mut Vec<Field>) {
     println!("Processing fields..");
     loop {
-        for &mut field in fields.iter_mut() {
+        // find all single numbers
+        let singles : Vec<usize> = fields.iter().filter(|f| {f.possible_indexes.len()==1})
+            .map(|f| {f.possible_indexes[0]}).collect();
+
+        if singles.len()==0 {
+            break;
+        }
+
+        for field in fields.iter_mut() {
             if field.possible_indexes.len()==1 {
                 continue;
             }
 
-            let mut ind = field.possible_indexes_mut();
-            for pos in 0..field.possible_indexes.len() {
-                // see if the number exists as a single in 
-                if is_single_number(field.possible_indexes[pos], &fields) {
-                    field.possible_indexes.remove(pos);
-                }
-            }
+            field.remove_singles(&singles);
+            //field.possible_indexes = field.possible_indexes.filter(|&n| { !singles.contains(n)}).collect();
         }
 
         // only stop when all fields have only one possible index
@@ -87,10 +98,6 @@ fn process_possible_indexes(fields: &mut Vec<Field>) {
             break;
         }
     }
-}
-
-fn is_single_number(num: usize, fields: &Vec<Field>) -> bool {
-    fields.iter().any(|f| {f.possible_indexes.len()==1 && f.possible_indexes[0]==num})
 }
 
 fn all_complete(fields: &Vec<Field>) -> bool {
@@ -155,6 +162,10 @@ impl Field {
 
         Field { name: name.to_string(), ranges: [Range::new(ranges[0]), Range::new(ranges[1])], possible_indexes: Vec::new() }
     }    
+
+    fn remove_singles(&mut self, singles: &Vec<usize>) {
+        self.possible_indexes = self.possible_indexes.clone().into_iter().filter(|n| { !singles.contains(n)}).collect();
+    }
 
     fn possible_indexes_mut(&mut self) -> &mut Vec<usize> {
         &mut self.possible_indexes
