@@ -2,13 +2,15 @@ use std::fs;
 use std::cmp;
 use crate::util;
 
+type Ticket = Vec<i32>;
+
 pub fn go() {
     println!("Day 16");
 
     let input = fs::read_to_string("inputs/input16.txt")
         .expect("Could not read the input file.");
 
-    let mut tickets : Vec<Ticket> = Vec::new();
+    let mut fields : Vec<Field> = Vec::new();
     
     // read the ticket values
     let lines : Vec<&str> = input.split(util::LINE_ENDING).collect();
@@ -25,27 +27,108 @@ pub fn go() {
             break;
         }
 
-        tickets.push(Ticket::new(line));
+        fields.push(Field::new(line));
     }
 
-    let my_ticket: Vec<i32> = lines[start].split(",").map(|s| { s.parse::<i32>().unwrap() }).collect();
+    let mut all_tickets: Vec<Ticket> = Vec::new();
+
+    // my ticket
+    all_tickets.push(create_ticket(lines[start]));
     start += 3;
-    
-    let mut nearby_tickets: Vec<i32> = Vec::new();
+
+    // nearby tickets
     for row in start..lines.len() {
-        let line = lines[row];
-        line.split(",").for_each(|s| {
-            nearby_tickets.push(s.parse::<i32>().unwrap());
-        });
+        all_tickets.push(create_ticket(lines[row]));
     }
 
-    let total: i32 = nearby_tickets.iter().filter(|&n | { is_invalid(*n, &tickets) }).sum();
-    println!("Sum of invalid: {}", total);
+    let valid_tickets: Vec<Ticket> = all_tickets.iter().filter(|&t| { sum_of_invalid_numbers(t, &fields)==0 })
+        .cloned().collect();
+
+    println!("Valid tickets: {}", valid_tickets.len());
+
+    let myticket = &all_tickets[0];
+    let mut mytotal = 0i32;
+
+    set_possible_indexes(&mut fields, &valid_tickets);
+    process_possible_indexes(&mut fields);
+
+    for field in fields {
+        println!("{}: {:?}", field.name, field.possible_indexes);
+    }
+
 }
 
-fn is_invalid(num: i32, tickets: &Vec<Ticket>) -> bool {
-    for ticket in tickets {
-        for range in ticket.ranges {
+fn set_possible_indexes(fields: &mut Vec<Field>, valid_tickets: &Vec<Ticket>) {
+    for mut field in fields {
+        field.possible_indexes = find_possible_indexes(field.ranges, valid_tickets);
+        println!("{}: {:?}", field.name, field.possible_indexes);
+    }
+}
+
+fn process_possible_indexes(fields: &mut Vec<Field>) {
+    println!("Processing fields..");
+    loop {
+        for &mut field in fields.iter_mut() {
+            if field.possible_indexes.len()==1 {
+                continue;
+            }
+
+            let mut ind = field.possible_indexes_mut();
+            for pos in 0..field.possible_indexes.len() {
+                // see if the number exists as a single in 
+                if is_single_number(field.possible_indexes[pos], &fields) {
+                    field.possible_indexes.remove(pos);
+                }
+            }
+        }
+
+        // only stop when all fields have only one possible index
+        if all_complete(&fields) {
+            break;
+        }
+    }
+}
+
+fn is_single_number(num: usize, fields: &Vec<Field>) -> bool {
+    fields.iter().any(|f| {f.possible_indexes.len()==1 && f.possible_indexes[0]==num})
+}
+
+fn all_complete(fields: &Vec<Field>) -> bool {
+    !fields.iter().any(|f| {f.possible_indexes.len()>1})
+}
+
+fn find_possible_indexes(ranges: [Range;2], valid_tickets: &Vec<Ticket>) -> Vec<usize> {
+    let mut result: Vec<usize> = Vec::new();
+
+    for index in 0..valid_tickets[0].len() {
+        let mut valid = true;
+        for ticket in valid_tickets {
+            let amount = ticket[index];
+            if !ranges[0].contains(amount) && !ranges[1].contains(amount) {
+                valid = false;
+                break;
+            }
+        }
+
+        if valid {
+            result.push(index);
+        }
+    }
+
+    result
+}
+
+fn create_ticket(line: &str) -> Ticket {
+    line.split(",").map(|s| { s.parse::<i32>().unwrap() }).collect()
+}
+
+fn sum_of_invalid_numbers(ticket: &Ticket, fields: &Vec<Field>) -> i32 {
+    ticket.iter().filter(|&n| { is_invalid(*n, fields)}).sum()
+}
+
+fn is_invalid(num: i32, fields: &Vec<Field>) -> bool {
+    for field in fields {
+        for range in field.ranges {
             if range.contains(num) {
                 return false;
             }
@@ -55,13 +138,13 @@ fn is_invalid(num: i32, tickets: &Vec<Ticket>) -> bool {
     true
 }
 
-
-struct Ticket {
+struct Field {
     name: String,
-    ranges: [Range;2]
+    ranges: [Range;2],
+    possible_indexes: Vec<usize>
 }
 
-impl Ticket {
+impl Field {
     fn new(line: &str) -> Self {
         let parts: Vec<&str> = line.split(": ").collect();
         let name = parts[0];
@@ -70,8 +153,12 @@ impl Ticket {
             panic!("Unexpected number of ranges");
         }
 
-        Ticket { name: name.to_string(), ranges: [Range::new(ranges[0]), Range::new(ranges[1])] }
+        Field { name: name.to_string(), ranges: [Range::new(ranges[0]), Range::new(ranges[1])], possible_indexes: Vec::new() }
     }    
+
+    fn possible_indexes_mut(&mut self) -> &mut Vec<usize> {
+        &mut self.possible_indexes
+    }
 }
 
 #[derive(Clone,Copy)]
