@@ -11,7 +11,7 @@ pub fn go() {
 
     let lines : Vec<&str> = input.split(util::LINE_ENDING).collect();
          
-    let mut grid = Grid3::new(-1, -1, 0, 3, 3, 1);
+    let mut grid = Grid3::new(-3, -3, 0, 8, 8, 1);
     for y in 0..grid.height as usize {
         let line = lines[y];
         for x in 0..grid.width as usize {
@@ -30,6 +30,8 @@ pub fn go() {
         new_grid.print();
 
         println!("Active: {}", new_grid.count_active());
+        
+        grid = new_grid;
     }
 }
 
@@ -73,12 +75,12 @@ impl Grid3 {
         new_grid
     }
 
-    fn clone(grid: &Grid3) -> Self {
-        let mut new_grid = Grid3::new(grid.start_x, grid.start_y, grid.start_z,
-            grid.width, grid.height, grid.depth);
-        new_grid.state = grid.state.clone();
-        new_grid
-    }
+    // fn clone(grid: &Grid3) -> Self {
+    //     let mut new_grid = Grid3::new(grid.start_x, grid.start_y, grid.start_z,
+    //         grid.width, grid.height, grid.depth);
+    //     new_grid.state = grid.state.clone();
+    //     new_grid
+    // }
 
     fn count_active(&self) -> usize {
         self.state.iter().filter(|&s| {*s}).count()
