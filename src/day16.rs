@@ -52,9 +52,9 @@ pub fn go() {
     set_possible_indexes(&mut fields, &valid_tickets);
     process_possible_indexes(&mut fields);
 
-    // for field in &fields {
-    //     println!("{}: {:?}", field.name, field.possible_indexes);
-    // }
+    for field in &fields {
+        println!("{}: {:?}", field.name, field.possible_indexes);
+    }
 
     let mut mult: i64 = 1;
 
