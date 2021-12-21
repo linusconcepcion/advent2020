@@ -22,32 +22,30 @@ pub fn go() {
 
 fn process_line(line: &str) -> i64 {
     let mut pos = 0;
-    let mut result = 0;
-    let mut last_op = ' ';
+    let mut simple: String = "".to_string();
 
+    // process all paren
     loop {
         let (val, nextpos) = get_value_at(&line, pos);
 
-        if last_op == '+' {
-            result = result + val;
-        } else if last_op == '*' {
-            result = result * val;
-        } else {
-            result = val;
-        }
-
+        simple += &val.to_string();
         if nextpos>=line.len() {
             break;
         }
-        pos = nextpos;
 
+        pos = nextpos;
         let op = &line[pos..pos+3];
-        if op == " + " {
-            last_op = '+';
-        } else if op == " * " {
-            last_op = '*';
-        }
+        simple += op;
+
         pos += 3;
+    }
+
+    let mults : Vec<&str> = simple.split(" * ").collect();
+    let mut result = 1;
+
+    for mult in mults {
+        let sum: i64 = mult.split(" + ").map(|s| { s.parse::<i64>().unwrap() }).sum();
+        result = result * sum;
     }
 
     result
