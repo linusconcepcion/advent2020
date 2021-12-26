@@ -16,10 +16,12 @@ pub fn go() {
         .collect();
 
     let mut cache : HashMap<i32, Vec<String>> = HashMap::new();
-    let possible = Rule::get_possible_values_from_id(&rules, &mut cache, 0);
+    let possible : HashMap<String, i32> = Rule::get_possible_values_from_id(&rules, &mut cache, 0)
+        .into_iter().map(|s| {(s, 0)}).collect();
 
-    let count = possible.len();
-    //let count = lines.into_iter().filter(|&l| {(l.starts_with("a") || l.starts_with("b")) && possible.contains(&l.to_string())}).count();
+    println!("all possible entries found.");
+
+    let count = lines.into_iter().filter(|&l| {(l.starts_with("a") || l.starts_with("b")) && possible.contains_key(l)}).count();
     println!("count: {}", count);
 }
 
