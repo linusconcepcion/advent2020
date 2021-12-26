@@ -42,7 +42,17 @@ struct Rule {
 impl Rule {
     fn new(line: &str) -> Self {
         let parts: Vec<&str> = line.split(": ").collect();
-        Rule { number: parts[0].parse::<i32>().unwrap(), definition: parts[1].to_string() }
+        let number = parts[0].parse::<i32>().unwrap();
+
+        let definition = if number == 8 {
+            "42 | 42 8".to_string()
+        } else if number == 11 {
+            "42 31 | 42 11 31".to_string()
+        } else {
+            parts[1].to_string()
+        };
+
+        Rule { number, definition }
     }
 
     fn create_tuple(line: &str) -> (i32, Rule) {
@@ -64,32 +74,34 @@ impl Rule {
     fn get_possible_values(&self, all: &HashMap<i32, Rule>, cache: &mut HashMap<i32, Vec<String>>, counters: &mut Counters) -> Vec<String> {
         let result = match cache.get(&self.number) {
             Some(s) => s,
-            None => {
-                if self.definition.contains("\"") {
-                    return vec![self.definition[1..2].to_string()];
-                } else {
-                    let ors = self.definition.split(" | ");
-                    return ors.map(|o| { Rule::expand_value(o, all, cache, counters) })
-                        .flatten().collect();
-                }
-            }
+            None => &Rule::process_definition(self.number, self.definition, |ids| { Rule::expand_value(ids, all, cache, counters) })
         };
         
         result.clone()
+    }
+
+    fn process_definition(number: i32, definition: String, expandfunc: fn(ids: &str) -> Vec<String>) -> Vec<String> {
+        if definition.contains("\"") {
+            return vec![definition[1..2].to_string()];
+        } else {
+            let ors = definition.split(" | ");
+            return ors.map(|o| { expandfunc(o) })
+                .flatten().collect();
+        }
     }
 
     fn expand_value(ids: &str, all: &HashMap<i32, Rule>, cache: &mut HashMap<i32, Vec<String>>, counters: &mut Counters) -> Vec<String> {
         let idvals: Vec<i32> = ids.split(' ').map(|s| { s.parse::<i32>().unwrap() }).collect();
         if idvals.len()==1 {
             let x = idvals[0];
-            return Rule::get_possible_values_from_id(all, cache, counters, x).to_vec();   //all.get_mut(&x).unwrap().get_possible_values(all).to_vec();
+            return Rule::get_possible_values_from_id(all, cache, counters, x).to_vec(); 
         }
         else if idvals.len()==2 {
             let x = idvals[0];
             let y = idvals[1];
             let mut result = Vec::<String>::new();
-            for x1 in Rule::get_possible_values_from_id(all, cache, counters, x) { //all.get_mut(&x).unwrap().get_possible_values(all) {
-                for y1 in Rule::get_possible_values_from_id(all, cache, counters, y) { //all.get_mut(&y).unwrap().get_possible_values(all) {
+            for x1 in Rule::get_possible_values_from_id(all, cache, counters, x) { 
+                for y1 in Rule::get_possible_values_from_id(all, cache, counters, y) { 
                     result.push(x1.clone() + &y1);
                 }
             }
@@ -100,9 +112,9 @@ impl Rule {
             let y = idvals[1];
             let z = idvals[2];
             let mut result = Vec::<String>::new();
-            for x1 in Rule::get_possible_values_from_id(all, cache, counters, x) {//all.get_mut(&x).unwrap().get_possible_values(all) {
-                for y1 in Rule::get_possible_values_from_id(all, cache, counters, y) {//all.get_mut(&y).unwrap().get_possible_values(all) {
-                    for z1 in Rule::get_possible_values_from_id(all, cache, counters, z) {//all.get_mut(&z).unwrap().get_possible_values(all) {
+            for x1 in Rule::get_possible_values_from_id(all, cache, counters, x) {
+                for y1 in Rule::get_possible_values_from_id(all, cache, counters, y) {
+                    for z1 in Rule::get_possible_values_from_id(all, cache, counters, z) {
                         result.push(x1.clone() + &y1 + &z1);
                     }
                 }
